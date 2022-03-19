@@ -68,6 +68,23 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         return hoobNode
     }
     
+    func getBall () -> SCNNode? {
+        // Create ball geometry
+        let ball = SCNSphere(radius: 0.125)
+        ball.firstMaterial?.diffuse.contents = UIImage(named: "basketball.png")
+        
+        // Create ball node
+        let ballNode = SCNNode(geometry: ball)
+        
+        // Get current frame
+        guard let frame = sceneView.session.currentFrame else {return nil}
+        
+        // Assign camera position to ball
+        ballNode.simdTransform = frame.camera.transform
+        
+        return ballNode
+    }
+    
     func getPlane (for anchor: ARPlaneAnchor) -> SCNNode {
         let extent = anchor.extent
         let plane = SCNPlane(width: CGFloat(extent.x),  height: CGFloat(extent.z))
@@ -115,17 +132,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     
     @IBAction func userTapped(_ sender: UITapGestureRecognizer) {
-        let location = sender.location(in: sceneView)
-        
-        guard let result = sceneView.hitTest(location, types: .existingPlaneUsingExtent).first else {return}
-        
-        guard let anchor = result.anchor as? ARPlaneAnchor, anchor.alignment == .vertical else {return}
-        
         if isHoobAdded {
             
-            // Add basketballs
+            // Get ball node
+            guard let ballNode = getBall() else {return}
+            
+            // Add ball on the camera position
+            sceneView.scene.rootNode.addChildNode(ballNode)
             
         } else {
+            
+            let location = sender.location(in: sceneView)
+            
+            guard let result = sceneView.hitTest(location, types: .existingPlaneUsingExtent).first else {return}
+            
+            guard let anchor = result.anchor as? ARPlaneAnchor, anchor.alignment == .vertical else {return}
+            
             
             //Get hoobNode and set coordinats to the point user touch
             let hoobNode = getHoobNode()
