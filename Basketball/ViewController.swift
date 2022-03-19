@@ -9,7 +9,21 @@ import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
     
+    // MARK: -Outlets
+    
     @IBOutlet var sceneView: ARSCNView!
+    
+    // MARK: -Properites
+    
+    // Create a session configuration
+    let configuration = ARWorldTrackingConfiguration()
+    
+    var isHoobAdded = false {
+        didSet {
+            configuration.planeDetection = []
+            sceneView.session.run(configuration, options: .removeExistingAnchors)
+        }
+    }
     
     // MARK: -UIViewController
     
@@ -26,11 +40,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // Create a session configuration
-        let configuration = ARWorldTrackingConfiguration()
-        
         //Detect planes
         configuration.planeDetection = .vertical
+        
+        // Add people occlusion
+        configuration.frameSemantics.insert(.personSegmentationWithDepth)
         
         // Run the view's session
         sceneView.session.run(configuration)
@@ -50,9 +64,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
         
         let hoobNode = scene.rootNode.clone()
-        
-        // Hoobnode make is vertical
-        hoobNode.eulerAngles.x -= .pi / 2
         
         return hoobNode
     }
@@ -100,5 +111,34 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Update plane node
         updatePlaneNode(node, for: planeAnhcor)
+    }
+    
+    
+    @IBAction func userTapped(_ sender: UITapGestureRecognizer) {
+        let location = sender.location(in: sceneView)
+        
+        guard let result = sceneView.hitTest(location, types: .existingPlaneUsingExtent).first else {return}
+        
+        guard let anchor = result.anchor as? ARPlaneAnchor, anchor.alignment == .vertical else {return}
+        
+        if isHoobAdded {
+            
+            // Add basketballs
+            
+        } else {
+            
+            //Get hoobNode and set coordinats to the point user touch
+            let hoobNode = getHoobNode()
+            hoobNode.simdTransform = result.worldTransform
+            
+            // Hoobnode make is vertical
+            hoobNode.eulerAngles.x -= .pi / 2
+            //Add hoob to planeAnchor
+            sceneView.scene.rootNode.addChildNode(hoobNode)
+            
+            isHoobAdded = true
+            
+            print(#line,#function,result)
+        }
     }
 }
