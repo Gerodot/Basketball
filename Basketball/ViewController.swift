@@ -11,6 +11,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
+    // MARK: -UIViewController
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -26,6 +28,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
+        
+        //Detect planes
+        configuration.planeDetection = .vertical
 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -38,7 +43,29 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.pause()
     }
 
+    // MARK: - Metods
+    
+    func getHoobNode () -> SCNNode {
+        
+        let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
+        
+        let hoobNode = scene.rootNode.clone()
+        
+        // Hoobnode make is vertical
+        hoobNode.eulerAngles.x -= .pi / 2
+        
+        return hoobNode
+    }
+    
     // MARK: - ARSCNViewDelegate
+    
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {return}
+        
+        
+        //Add ht hoob to the detected vertical plane
+        node.addChildNode(getHoobNode())
+    }
     
 /*
     // Override to create and configure nodes for anchors added to the view's session.
