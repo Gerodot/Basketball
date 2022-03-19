@@ -8,7 +8,7 @@
 import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
-
+    
     @IBOutlet var sceneView: ARSCNView!
     
     // MARK: -UIViewController
@@ -31,7 +31,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         //Detect planes
         configuration.planeDetection = .vertical
-
+        
         // Run the view's session
         sceneView.session.run(configuration)
     }
@@ -42,7 +42,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
-
+    
     // MARK: - Metods
     
     func getHoobNode () -> SCNNode {
@@ -57,6 +57,33 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         return hoobNode
     }
     
+    func getPlane (for anchor: ARPlaneAnchor) -> SCNNode {
+        let extent = anchor.extent
+        let plane = SCNPlane(width: CGFloat(extent.x),  height: CGFloat(extent.z))
+        plane.firstMaterial?.diffuse.contents = UIColor.green
+        
+        //Create 25% transpatrent plane node
+        let planeNode = SCNNode(geometry: plane)
+        planeNode.opacity = 0.25
+        
+        //Rotate plane node
+        planeNode.eulerAngles.x -= .pi / 2
+        
+        return planeNode
+    }
+    
+    func updatePlaneNode (_ node: SCNNode, for anchor: ARPlaneAnchor) {
+        guard let planeNode = node.childNodes.first, let plane = planeNode.geometry as? SCNPlane else {return}
+        
+        //Change plane node center
+        planeNode.simdPosition = anchor.center
+        
+        //Change plane node size
+        let extent = anchor.extent
+        plane.height = CGFloat(extent.z)
+        plane.width = CGFloat(extent.x)
+    }
+    
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -64,17 +91,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         
         //Add ht hoob to the detected vertical plane
-        node.addChildNode(getHoobNode())
+        node.addChildNode(getPlane(for: planeAnchor))
+        //getHoobNode()
     }
     
-/*
-    // Override to create and configure nodes for anchors added to the view's session.
-    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-        let node = SCNNode()
-     
-        return node
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnhcor = anchor as? ARPlaneAnchor, planeAnhcor.alignment == .vertical else {return}
+        
+        // Update plane node
+        updatePlaneNode(node, for: planeAnhcor)
     }
-*/
-    
-
 }
