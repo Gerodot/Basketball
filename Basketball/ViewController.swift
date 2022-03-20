@@ -65,13 +65,21 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         let hoobNode = scene.rootNode.clone()
         
+        hoobNode.physicsBody = SCNPhysicsBody(
+            type: .static,
+            shape: SCNPhysicsShape(
+                node: hoobNode,
+                options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]
+            )
+        )
+        
         return hoobNode
     }
     
     func getBall () -> SCNNode? {
         // Get current frame
         guard let frame = sceneView.session.currentFrame else {return nil}
-
+        
         // Get camera transorm
         let cameraTtransform = frame.camera.transform
         let matrixCameraTransform = SCNMatrix4(cameraTtransform)
@@ -84,7 +92,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let ballNode = SCNNode(geometry: ball)
         
         // Add physics body
-        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape())
+        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: ballNode))
         
         // Calculate matrix force for pushing ball
         let power = Float(5)
