@@ -63,17 +63,17 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
         
-        let hoobNode = scene.rootNode.clone()
+        let hoopNode = scene.rootNode.clone()
         
-        hoobNode.physicsBody = SCNPhysicsBody(
+        hoopNode.physicsBody = SCNPhysicsBody(
             type: .static,
             shape: SCNPhysicsShape(
-                node: hoobNode,
+                node: hoopNode,
                 options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]
             )
         )
         
-        return hoobNode
+        return hoopNode
     }
     
     func getBall () -> SCNNode? {
@@ -86,7 +86,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create ball geometry
         let ball = SCNSphere(radius: 0.125)
-        ball.firstMaterial?.diffuse.contents = UIImage(named: "basketball.png")
+        ball.firstMaterial?.diffuse.contents = UIImage(named: "basketball")
         
         // Create ball node
         let ballNode = SCNNode(geometry: ball)
