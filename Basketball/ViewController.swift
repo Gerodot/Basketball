@@ -41,7 +41,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         super.viewWillAppear(animated)
         
         //Detect planes
-        configuration.planeDetection = .vertical
+        configuration.planeDetection = [.vertical, .horizontal]
         
         // Add people occlusion
         configuration.frameSemantics.insert(.personSegmentationWithDepth)
@@ -69,6 +69,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
     
     func getBall () -> SCNNode? {
+        // Get current frame
+        guard let frame = sceneView.session.currentFrame else {return nil}
+
+        // Get camera transorm
+        let cameraTtransform = frame.camera.transform
+        let matrixCameraTransform = SCNMatrix4(cameraTtransform)
+        
         // Create ball geometry
         let ball = SCNSphere(radius: 0.125)
         ball.firstMaterial?.diffuse.contents = UIImage(named: "basketball.png")
@@ -76,8 +83,19 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Create ball node
         let ballNode = SCNNode(geometry: ball)
         
-        // Get current frame
-        guard let frame = sceneView.session.currentFrame else {return nil}
+        // Add physics body
+        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape())
+        
+        // Calculate matrix force for pushing ball
+        let power = Float(5)
+        let x = -matrixCameraTransform.m31 * power
+        let y = -matrixCameraTransform.m32 * power
+        let z = -matrixCameraTransform.m33 * power
+        let forceDirection = SCNVector3(x,y,z)
+        
+        // Apply force
+        ballNode.physicsBody?.applyForce(forceDirection, asImpulse: true)
+        
         
         // Assign camera position to ball
         ballNode.simdTransform = frame.camera.transform
