@@ -20,7 +20,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     var isHoobAdded = false {
         didSet {
-            configuration.planeDetection = []
+            // configuration.planeDetection = []
             sceneView.session.run(configuration, options: .removeExistingAnchors)
         }
     }
@@ -59,23 +59,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     // MARK: - Metods
     
-    func getHoobNode () -> SCNNode {
-        
-        let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
-        
-        let hoopNode = scene.rootNode.clone()
-        
-        hoopNode.physicsBody = SCNPhysicsBody(
-            type: .static,
-            shape: SCNPhysicsShape(
-                node: hoopNode,
-                options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]
-            )
-        )
-        
-        return hoopNode
-    }
-    
     func getBall () -> SCNNode? {
         // Get current frame
         guard let frame = sceneView.session.currentFrame else {return nil}
@@ -111,6 +94,23 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         return ballNode
     }
     
+    func getHoopNode () -> SCNNode {
+        
+        let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
+        
+        let hoopNode = scene.rootNode.clone()
+        
+        hoopNode.physicsBody = SCNPhysicsBody(
+            type: .static,
+            shape: SCNPhysicsShape(
+                node: hoopNode,
+                options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]
+            )
+        )
+        
+        return hoopNode
+    }
+    
     func getPlane (for anchor: ARPlaneAnchor) -> SCNNode {
         let extent = anchor.extent
         let plane = SCNPlane(width: CGFloat(extent.x),  height: CGFloat(extent.z))
@@ -122,6 +122,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         //Rotate plane node
         planeNode.eulerAngles.x -= .pi / 2
+        
+        // Add physics for plane nodes
+        planeNode.physicsBody = SCNPhysicsBody(type: .static, shape:SCNPhysicsShape(geometry: plane))
         
         return planeNode
     }
@@ -136,21 +139,27 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let extent = anchor.extent
         plane.height = CGFloat(extent.z)
         plane.width = CGFloat(extent.x)
+        
+        if isHoobAdded {
+            planeNode.opacity = 0
+        }
     }
     
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {return}
         
-        
-        //Add ht hoob to the detected vertical plane
+        // guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {return}
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {return} // removeed alignment property сondition
+       
+        // Add ht hoob to the detected vertical plane
         node.addChildNode(getPlane(for: planeAnchor))
-        //getHoobNode()
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnhcor = anchor as? ARPlaneAnchor, planeAnhcor.alignment == .vertical else {return}
+        
+        // guard let planeAnhcor = anchor as? ARPlaneAnchor, planeAnhcor.alignment == .vertical else {return}
+        guard let planeAnhcor = anchor as? ARPlaneAnchor else {return} // removeed alignment property сondition
         
         // Update plane node
         updatePlaneNode(node, for: planeAnhcor)
@@ -165,7 +174,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             
             // Add ball on the camera position
             sceneView.scene.rootNode.addChildNode(ballNode)
-            
         } else {
             
             let location = sender.location(in: sceneView)
@@ -176,7 +184,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             
             
             //Get hoobNode and set coordinats to the point user touch
-            let hoobNode = getHoobNode()
+            let hoobNode = getHoopNode()
             hoobNode.simdTransform = result.worldTransform
             
             // Hoobnode make is vertical
