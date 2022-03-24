@@ -18,6 +18,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     // Create a session configuration
     let configuration = ARWorldTrackingConfiguration()
     
+    
     var isHoobAdded = false {
         didSet {
             // configuration.planeDetection = []
@@ -45,6 +46,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Add people occlusion
         configuration.frameSemantics.insert(.personSegmentationWithDepth)
+        
+        // Add light estimation
+        configuration.isLightEstimationEnabled = true
         
         // Run the view's session
         sceneView.session.run(configuration)
